@@ -7,38 +7,22 @@ using MarineShips;
 
 namespace Fields
 {
-    public class IsIntersected
+    public class Field
     {
+        public int Length { get; set; }
+
+        public static void SortShips(List<Ship> ships)
+        {
+            var sortedShips = from s in ships
+                orderby s.LengthToCenter()
+                select s;
+        }
+
         public static bool IsIntersect(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4)
         {
-            int k1 = (x2 - x1) / (y2 - y1);
-            int k2 = (x4 - x3) / (y4 - y3);
-            if (k1 == k2)
+            if (x1 == x2 && y1 == y2)
             {
-                if (x1 / y1 == x3 / y3)
-                {
-                    if ((x1 < x2 && ((x1 < x3 && x2 > x3) || (x1 < x4 && x2 > x4))) ||
-                        (x1 > x2 && ((x1 > x3 && x2 < x3) || (x1 > x4 && x2 < x4))))
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                int x = ((x1 * y2 - x2 * y1) * (x4 - x3) - (x3 * y4 - x4 * y3) * (x2 - x1)) / ((y1 - y2) * (x4 - x3) - (y3 - y4) * (x2 - x1));
-                int y = ((y3 - y4) * x - (x3 * y4 - x4 * y3)) / (x4 - x3);
-
-                if (((x1 <= x) && (x2 >= x) && (x3 <= x) && (x4 >= x)) ||
-                    ((y1 <= y) && (y2 >= y) && (y3 <= y) && (y4 >= y)))
+                if (Math.Abs((x1 - x3) / (x4 - x3)) == Math.Abs((y1 - y3) / (y4 - y3)))
                 {
                     return true;
                 }
@@ -47,23 +31,38 @@ namespace Fields
                     return false;
                 }
             }
+
+            if (x3 == x4 && y3 == y4)
+            {
+                if (Math.Abs((x3 - x1) / (x2 - x1)) == Math.Abs((y3 - y1) / (y2 - y1)))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            int multVectors1 = ((x1 - x3) * (x1 - x4)) - ((y1 - y4) * (y1 - y3));
+
+            int multVectors2 = ((x2 - x3) * (x2 - x4)) - ((y2 - y4) + (y2 - y3));
+
+            if (Math.Sign(multVectors1) == Math.Sign(multVectors2) ||
+                (Math.Sign(multVectors1) == 0 || Math.Sign(multVectors2) == 0))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
-    }
 
-    public class Field
-    {
-        public Field(int Length)
+        public bool IsEnoughSpace(int[] location, double length, List<Ship> ships)
         {
-            Length = Length;
-        }
-
-        public int Length { get; set; }
-        public List<Ship> ships { get; set; }
-
-        public bool IsEnoughSpace(List<int> Location, double Length, List<Ship> ships)
-        {
-            if (Location[1] > Length || Location[0] > Length || Location[1] < -Length || Location[0] < -Length ||
-                Location[3] > Length || Location[2] > Length || Location[3] < -Length || Location[2] < -Length)
+            if (location[1] > length || location[0] > length || location[1] < -length || location[0] < -length ||
+                location[3] > length || location[2] > length || location[3] < -length || location[2] < -length)
             {
                 return false;
             }
@@ -74,8 +73,8 @@ namespace Fields
                 {
                     foreach (var ship in ships)
                     {
-                        if (!IsIntersected.IsIntersect(Location[0], Location[1], Location[2], Location[3],
-                                ship.Location[0], ship.Location[1], ship.Location[2], ship.Location[3]))
+                        if (IsIntersect(location[0], location[1], location[2], location[3], ship.Location[0], ship.Location[1], ship.Location[2], ship.Location[3]) &&
+                            IsIntersect(ship.Location[0], ship.Location[1], ship.Location[2], ship.Location[3], location[0], location[1], location[2], location[3]))
                         {
                             flag = false;
                         }
@@ -83,23 +82,6 @@ namespace Fields
                 }
 
                 return flag;
-            }
-        }
-        public void AddShip(Ship ship, List<Ship> ships, List<int> location)
-        {
-            Console.WriteLine("Enter the position of the ship. Mind that the position is defined by ship's coordinates (x1,y1,x2,y2)!");
-            for (int i = 0; i < 4; i++)
-            {
-                location.Add(int.Parse(Console.ReadLine()));
-            }
-
-            if (IsEnoughSpace(ship.Location, Length, ships))
-            {
-                ships.Add(ship);
-            }
-            else
-            {
-                Console.WriteLine("Cant set the ship here!");
             }
         }
     }
